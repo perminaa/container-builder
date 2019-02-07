@@ -20,9 +20,12 @@ jobs:
       - run:
           name: Prepare Sregistry Environment
           command: | 
-              if [ -z "${SREGISTRY_CREDENTIALS}" ]; then
-                  cat ${SREGISTRY_CREDENTIALS} >
+              if [[ -z "${SREGISTRY_CREDENTIALS}" ]]; then
+                  echo "Warning! SREGISTRY_CREDENTIALS not found in environment, deploy will fail (but you can build)."
+              else
+                  cat "${SREGISTRY_CREDENTIALS}" > $HOME/.sregistry
               fi
+
       - run:
           name: install dependencies
           command: | 
