@@ -1,0 +1,140 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+# Export
+#
+version: 2
+jobs:
+  build:
+    machine: true
+    working_directory: ~/repo
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies
+
+      - run:
+          name: install dependencies
+          command: | 
+            ls $HOME
+            if [ ! -d "/home/circleci/conda" ]; then
+                wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+                /bin/bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/conda
+                export PATH=$HOME/conda/bin:$PATH
+                $HOME/conda/bin/pip install sregistry[all]
+            else
+                echo "Miniconda is already installed, continuing to build."
+            fi
+            chmod u+x ~/repo/.circleci/*.sh
+            /bin/bash ~/repo/.circleci/setup.sh
+
+      - save_cache:
+          paths:
+            - /home/circleci/conda
+          key: v1-dependencies
+        
+      - run:
+          name: Build Containers
+          command: |
+            cd ~/repo
+            mkdir -p build
+            # Find all singularity recipes
+            for recipe in $(find $PWD -name "Singularity*")
+                do  
+
+                    container_dir=$(dirname ${recipe})
+
+                    # Only build the container collection if it's not frozen
+                    if [ -f "$container_dir/.frozen" ]; then
+                        echo "$container_dir/.frozen found, $recipe (collection) not marked for build."
+                        continue
+                    fi
+
+                    # Look for a frozen file named equivalently (or we have the file)
+                    if [[ $recipe == *".frozen"* ]]; then
+                        echo "$recipe is a .frozen marker, not intended for build."
+                        continue
+                    fi
+
+                    # Finally, if the tag is frozen (not the collection)
+                    if [ -f ${recipe}.frozen ]; then
+                        echo "${recipe}.frozen marker found! ${recipe} is not marked for build."
+                        continue
+                    fi
+
+                    echo "Found changed recipe $recipe"
+
+                    # If the user provided a build script, run it instead
+                    if [ -f "${container_dir}/build.sh" ]; then
+                        echo "Found ${container_dir}/build.sh"
+                        chmod u+x ${container_dir}/build.sh
+                        /bin/bash ${container_dir}/build.sh ${recipe}
+                    else
+                        /bin/bash ~/repo/.circleci/build.sh ${recipe}
+                    fi
+
+                    # Get the tag based on the extension
+                    filename=$(basename -- "${recipe}")
+                    container_tag="${filename##*.}"
+                    if [ "${container_tag}" == "Singularity" ]; then
+                        container_tag=latest
+                    fi
+
+                    # Rename image based on shasum
+                    container_name=`sha256sum ${recipe}.sif | awk '{ print $1 }'`
+                    container_size=`du -k "${recipe}.sif" | cut -f1`
+
+                    echo
+                    echo "Successfully built ${recipe}"
+                    echo "   sha256sum -> $container_name"
+                    echo "   tag       -> $container_tag"
+                    echo "   size      -> $container_size"
+
+                    # Add the build command to be built after HOLD
+                    echo "SREGISTRY_CLIENT=registry sregistry push --name "${container_dir}:${container_tag}" "${recipe}.sif" >> .pushlist
+
+                done
+
+              echo "Final push list, to be pushed on approval of CircleCI Hold:"
+              cat .pushlist
+
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - repo
+
+
+  deploy:
+    machine: true
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Update if branch is not master
+          command: |
+             echo "Pushing Containers!" 
+             cat .pushlist
+
+workflows:
+  version: 2
+  build_deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: master
+      - hold:
+          type: approval
+          requires: 
+            - build
+      - deploy:
+          requires: 
+            - hold
+          filters:
+            branches:
+              ignore: master
