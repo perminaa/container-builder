@@ -2,8 +2,6 @@
 
 ![.circleci/sregistry-circle.png](.circleci/sregistry-circle.png)
 
-[![CircleCI](https://circleci.com/gh/singularityhub/circle-ci.svg?style=svg)](https://circleci.com/gh/singularityhub/circle-ci)
-
 This is a simple example of how you can achieve:
 
  - version control of your recipes

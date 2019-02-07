@@ -18,6 +18,12 @@ jobs:
           - v1-dependencies
 
       - run:
+          name: Prepare Sregistry Environment
+          command: | 
+              if [ -z "${SREGISTRY_CREDENTIALS}" ]; then
+                  cat ${SREGISTRY_CREDENTIALS} >
+              fi
+      - run:
           name: install dependencies
           command: | 
             ls $HOME
