@@ -20,9 +20,12 @@ jobs:
       - run:
           name: Prepare Sregistry Environment
           command: | 
-              if [ -z "${SREGISTRY_CREDENTIALS}" ]; then
-                  cat ${SREGISTRY_CREDENTIALS} >
+              if [[ -z "${SREGISTRY_CREDENTIALS}" ]]; then
+                  echo "Warning! SREGISTRY_CREDENTIALS not found in environment, deploy will fail (but you can build)."
+              else
+                  cat "${SREGISTRY_CREDENTIALS}" > $HOME/.sregistry
               fi
+
       - run:
           name: install dependencies
           command: | 
@@ -100,8 +103,11 @@ jobs:
                     echo "   tag       -> $container_tag"
                     echo "   size      -> $container_size"
 
+                    # derive the collection name
+                    collection_dir="${container_dir/\/home\/circleci\/repo\//}"
+
                     # Add the build command to be built after HOLD
-                    echo "SREGISTRY_CLIENT=registry sregistry push --name "${container_dir}:${container_tag}" "${recipe}.sif" >> .pushlist
+                    echo "SREGISTRY_CLIENT=registry sregistry push --name \"${collection_dir}:${container_tag}\" \"${recipe}.sif\"" >> .pushlist
 
                 done
 
@@ -121,10 +127,16 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Update if branch is not master
+          name: Deploy containers to sregistry server
           command: |
-             echo "Pushing Containers!" 
              cat .pushlist
+              if [[ -z "${SREGISTRY_CREDENTIALS}" ]]; then
+                  echo "SREGISTRY_CREDENTIALS not found in environment, skipping deploy."
+              else
+                  echo "Pushing Containers!" 
+                  chmod u+x .pushlist
+                 /bin/bash .pushlist
+              fi
 
 workflows:
   version: 2
