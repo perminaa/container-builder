@@ -127,14 +127,14 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Update if branch is not master
+          name: Deploy containers to sregistry server
           command: |
-             echo "Pushing Containers!" 
-             chmod u+x .pushlist
              cat .pushlist
               if [[ -z "${SREGISTRY_CREDENTIALS}" ]]; then
                   echo "SREGISTRY_CREDENTIALS not found in environment, skipping deploy."
               else
+                  echo "Pushing Containers!" 
+                  chmod u+x .pushlist
                  /bin/bash .pushlist
               fi
 
