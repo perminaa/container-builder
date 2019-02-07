@@ -104,7 +104,7 @@ jobs:
                     echo "   size      -> $container_size"
 
                     # derive the collection name
-                    collection_dir="${container_dir/\/home\/circleci\/repo/}"
+                    collection_dir="${container_dir/\/home\/circleci\/repo\//}"
 
                     # Add the build command to be built after HOLD
                     echo "SREGISTRY_CLIENT=registry sregistry push --name \"${collection_dir}:${container_tag}\" \"${recipe}.sif\"" >> .pushlist
