@@ -105,11 +105,11 @@ reflected in the repository (version controlled!).
 If you want to custom build a container, just add a build.sh file to the directory with the recipe.
 It will be used instead of the default build.sh provided with the repository.
 
-#### 3. Connect to CircleCI
+### 3. Connect to CircleCI
 
 If you go to your [Circle Dashboard](https://circleci.com/dashboard) you can usually select a Github organization (or user) and then the repository, and then click the toggle button to activate it to build on commit --> push.
 
-#### 4. CircleCI Environment
+### 4. CircleCI Environment
 
 In order to communicate with your Singularity Registry Server, you should generate a
 token (a credential to push) in your $HOME/.sregistry file. Then you should add the entire
