@@ -103,8 +103,11 @@ jobs:
                     echo "   tag       -> $container_tag"
                     echo "   size      -> $container_size"
 
+                    # derive the collection name
+                    collection_dir="${container_dir/\/home\/circleci\/repo/}"
+
                     # Add the build command to be built after HOLD
-                    echo "SREGISTRY_CLIENT=registry sregistry push --name "${container_dir}:${container_tag}" "${recipe}.sif" >> .pushlist
+                    echo "SREGISTRY_CLIENT=registry sregistry push --name \"${collection_dir}:${container_tag}\" \"${recipe}.sif\"" >> .pushlist
 
                 done
 
@@ -127,7 +130,13 @@ jobs:
           name: Update if branch is not master
           command: |
              echo "Pushing Containers!" 
+             chmod u+x .pushlist
              cat .pushlist
+              if [[ -z "${SREGISTRY_CREDENTIALS}" ]]; then
+                  echo "SREGISTRY_CREDENTIALS not found in environment, skipping deploy."
+              else
+                 /bin/bash .pushlist
+              fi
 
 workflows:
   version: 2

@@ -76,7 +76,7 @@ echo "Image Recipe: ${recipe}"
 
 if [ -f "$recipe" ]; then
 
-    imagefile="${recipe}.simg"
+    imagefile="${recipe}.sif"
 
     echo "Creating $imagefile using $recipe..."
     sudo singularity build $imagefile $recipe
