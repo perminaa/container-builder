@@ -119,10 +119,32 @@ contents of this file to an encrypted CircleCI environment variable (just copy p
 cat $HOME/.sregistry
 ```
 
-write this to the environment variable `SREGISTRY_SECRETS` in CircleCI.
+write this to the environment variable `SREGISTRY_CREDENTIALS` in CircleCI.
+If you don't define this variable, the builds will happen, but the deploy will
+be skipped.
  
 That should be it! You should then open pull requests to build containers,
-and then approve the Holds in the CircleCI interface to push to your registry.
+and then approve the Holds in the CircleCI interface to push to your registry. For example,
+here is the workflow view right after a hold was approved (notice that the deploy step is
+running):
+
+![.circleci/hold.png](.circleci/hold.png)
+
+And here is when the deploy is done!
+
+![.circleci/deploy.png](.circleci/deploy.png)
+
+You can check what will be deployed (and the command used) in the Build step, it will
+look something like this:
+
+```bash
+SREGISTRY_CLIENT=registry sregistry push --name "vanessa/greeting:latest" "/home/circleci/repo/vanessa/greeting/Singularity.sif"
+SREGISTRY_CLIENT=registry sregistry push --name "vanessa/greeting:tag" "/home/circleci/repo/vanessa/greeting/Singularity.tag.sif"
+```
+
+Notice how the container namespace reflects the folder organization provided in
+the repository here!
+
 If you are interested in learning more about CircleCI (extra features!) continue
 reading below.
 
