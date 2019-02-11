@@ -15,7 +15,7 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies
+          - v2-dependencies
 
       - run:
           name: Prepare Sregistry Environment
@@ -23,7 +23,7 @@ jobs:
               if [[ -z "${SREGISTRY_CREDENTIALS}" ]]; then
                   echo "Warning! SREGISTRY_CREDENTIALS not found in environment, deploy will fail (but you can build)."
               else
-                  cat "${SREGISTRY_CREDENTIALS}" > $HOME/.sregistry
+                  echo "${SREGISTRY_CREDENTIALS}" > $HOME/.sregistry
               fi
 
       - run:
@@ -44,7 +44,7 @@ jobs:
       - save_cache:
           paths:
             - /home/circleci/conda
-          key: v1-dependencies
+          key: v2-dependencies
         
       - run:
           name: Build Containers
@@ -118,7 +118,7 @@ jobs:
           root: ~/
           paths:
             - repo
-
+            - conda
 
   deploy:
     machine: true
@@ -129,9 +129,11 @@ jobs:
       - run:
           name: Deploy containers to sregistry server
           command: |
-             cat .pushlist
+              cat .pushlist
+              export PATH=$HOME/conda/bin:$PATH
               if [[ -z "${SREGISTRY_CREDENTIALS}" ]]; then
                   echo "SREGISTRY_CREDENTIALS not found in environment, skipping deploy."
+                  which sregistry
               else
                   echo "Pushing Containers!" 
                   chmod u+x .pushlist
