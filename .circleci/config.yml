@@ -118,7 +118,7 @@ jobs:
           root: ~/
           paths:
             - repo
-
+            - conda
 
   deploy:
     machine: true
