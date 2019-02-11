@@ -130,7 +130,7 @@ jobs:
           name: Deploy containers to sregistry server
           command: |
               cat .pushlist
-              export PATH=$HOME/conda/bin:$PATH
+              export PATH=$HOME/conda/bin:/opt/circleci/.pyenv/shims:$PATH
               if [[ -z "${SREGISTRY_CREDENTIALS}" ]]; then
                   echo "SREGISTRY_CREDENTIALS not found in environment, skipping deploy."
                   which sregistry
