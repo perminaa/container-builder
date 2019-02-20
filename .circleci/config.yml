@@ -75,16 +75,22 @@ jobs:
                         continue
                     fi
 
-                    echo "Found changed recipe $recipe"
+                    echo "Found changed recipe ${recipe}"
+ 
+                    # Recipe should be in PWD context
+                    cd ${container_dir}
 
                     # If the user provided a build script, run it instead
                     if [ -f "${container_dir}/build.sh" ]; then
                         echo "Found ${container_dir}/build.sh"
                         chmod u+x ${container_dir}/build.sh
-                        /bin/bash ${container_dir}/build.sh ${recipe}
+                        /bin/bash ${container_dir}/build.sh $(basename ${recipe})
                     else
-                        /bin/bash ~/repo/.circleci/build.sh ${recipe}
+                        /bin/bash ~/repo/.circleci/build.sh $(basename ${recipe})
                     fi
+                    
+                    # Return to previous directory
+                    cd ~/repo
 
                     # Get the tag based on the extension
                     filename=$(basename -- "${recipe}")
